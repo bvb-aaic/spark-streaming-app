@@ -207,7 +207,7 @@ def process_streaming_data(spark, source_bucket, dest_bucket, checkpoint_locatio
     # Read streaming data from S3
     # OOM Configuration: Set maxFilesPerTrigger to very high value to process ALL files at once
     # This will cause OOM when processing large files
-    max_files = int(os.getenv("MAX_FILES_PER_TRIGGER", "10000"))  # Very high default to process all files
+    max_files = int(os.getenv("MAX_FILES_PER_TRIGGER", "20000"))  # Very high default to process all files
     logger.info(f"OOM_CONFIG | file={SCRIPT_NAME} | max_files_per_trigger={max_files} | warning=Processing ALL files at once - OOM risk!")
     
     # Add streaming query listener to track progress
