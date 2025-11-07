@@ -1,0 +1,95 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spark-streaming-job
+  namespace: spark-streaming
+spec:
+  template:
+    metadata:
+      labels:
+        app: spark-streaming
+    spec:
+      serviceAccountName: spark-streaming-sa
+      restartPolicy: OnFailure
+      containers:
+      - name: spark-streaming
+        image: 879924793392.dkr.ecr.us-east-1.amazonaws.com/securonix-spark-build:latest
+        imagePullPolicy: Always
+        env:
+        - name: SOURCE_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: spark-streaming-config
+              key: SOURCE_BUCKET
+        - name: DEST_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: spark-streaming-config
+              key: DEST_BUCKET
+        - name: CHECKPOINT_LOCATION
+          valueFrom:
+            configMapKeyRef:
+              name: spark-streaming-config
+              key: CHECKPOINT_LOCATION
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: spark-streaming-config
+              key: AWS_REGION
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_SECRET_ACCESS_KEY
+        - name: AWS_SESSION_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_SESSION_TOKEN
+              optional: true
+        - name: AWS_S3_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_S3_ENDPOINT
+              optional: true
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+            ephemeral-storage: "5Gi"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+            ephemeral-storage: "10Gi"
+        command:
+        - /opt/spark/bin/spark-submit
+        - --master
+        - local[*]
+        - --driver-memory
+        - 512m
+        - --conf
+        - spark.driver.maxResultSize=256m
+        - --conf
+        - spark.sql.adaptive.enabled=false
+        - --conf
+        - spark.sql.adaptive.coalescePartitions.enabled=false
+        - --conf
+        - spark.sql.shuffle.partitions=1
+        - --conf
+        - spark.default.parallelism=1
+        - --conf
+        - spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem
+        - --conf
+        - spark.hadoop.fs.s3a.path.style.access=true
+        - --conf
+        - spark.hadoop.fs.s3a.region=$(AWS_REGION)
+        - --conf
+        - spark.sql.streaming.stateStore.providerClass=org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider
+        - /app/spark_streaming_app.py
+
