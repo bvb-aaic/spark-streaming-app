@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-streaming-config
+  namespace: spark-streaming
+data:
+  SOURCE_BUCKET: "s3a://spark-stream-source/input/"
+  DEST_BUCKET: "s3a://spark-stream-dest/output/"
+  CHECKPOINT_LOCATION: "s3a://spark-stream-check/checkpoint/"
+  AWS_REGION: "us-east-1"
+
